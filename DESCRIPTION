@@ -1,5 +1,5 @@
 Package: stapler
-Version: 0.6.5
+Version: 0.6.6
 Title: Simultaneous Truth and Performance Level Estimation
 Description: An implementation of Simultaneous Truth and 
     Performance Level Estimation (STAPLE) <doi:10.1109/TMI.2004.828354>.  This
@@ -12,7 +12,7 @@ Authors@R: c(person(given = "John", family = "Muschelli",
         comment = NULL))
 License: GPL-3
 Imports: matrixStats, RNifti
-Suggests: knitr, rmarkdown, covr, testthat
+Suggests: knitr, rmarkdown, covr, testthat, spelling
 Encoding: UTF-8
 LazyData: true
 ByteCompile: true
@@ -21,9 +21,10 @@ Maintainer: John Muschelli <muschellij2@gmail.com>
 VignetteBuilder: knitr
 URL: https://github.com/muschellij2/stapler
 BugReports: https://github.com/muschellij2/stapler/issues
-RoxygenNote: 6.0.1.9000
+RoxygenNote: 6.1.1
+Language: en-US
 NeedsCompilation: no
-Packaged: 2018-02-02 17:06:04 UTC; johnmuschelli
+Packaged: 2019-03-06 14:46:36 UTC; johnmuschelli
 Author: John Muschelli [aut, cre]
 Repository: CRAN
-Date/Publication: 2018-02-02 17:15:16 UTC
+Date/Publication: 2019-03-07 01:20:03 UTC

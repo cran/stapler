@@ -1,4 +1,5 @@
 test_that("Staple binary matrix", {
+  suppressWarnings(RNGversion("3.5.0"))
   set.seed(20171120)
   n = 5
   r = 1000
@@ -20,6 +21,7 @@ test_that("Staple binary matrix", {
   true_spec = colMeans(1 - pred[ truth == 0, ])
   x = t(pred)
 
+  # need test for getRversion() >= numeric_version("3.6.0")
   expect_message({res = staple_bin_mat(x)})
   expect_equal(res$sensitivity, c(0.741808211133125, 0.856147018471266,
                                   0.788254106963426, 0.320686380642557,
