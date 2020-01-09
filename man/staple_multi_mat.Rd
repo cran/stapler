@@ -4,10 +4,18 @@
 \alias{staple_multi_mat}
 \title{STAPLE on Multi-class matrix}
 \usage{
-staple_multi_mat(x, sens_init = 0.99999, spec_init = 0.99999,
-  max_iter = 10000, tol = .Machine$double.eps, prior = "mean",
-  verbose = TRUE, trace = 25, ties.method = c("first", "random",
-  "last"))
+staple_multi_mat(
+  x,
+  sens_init = 0.99999,
+  spec_init = 0.99999,
+  max_iter = 10000,
+  tol = .Machine$double.eps,
+  prior = "mean",
+  verbose = TRUE,
+  trace = 25,
+  ties.method = c("first", "random", "last"),
+  drop_all_same = FALSE
+)
 }
 \arguments{
 \item{x}{a nxr matrix where there are n raters and r elements rated}
@@ -28,6 +36,9 @@ staple_multi_mat(x, sens_init = 0.99999, spec_init = 0.99999,
 
 \item{ties.method}{Method passed to \code{\link{max.col}}
 for hard segmentation}
+
+\item{drop_all_same}{drop all records where they are all the same.
+DO NOT use in practice, only for validation of past results}
 }
 \value{
 List of matrix output sensitivities, specificities, and

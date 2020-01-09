@@ -10,6 +10,8 @@
 #' @param trace Number for modulus to print out verbose iterations
 #' @param ties.method Method passed to \code{\link{max.col}}
 #' for hard segmentation
+#' @param drop_all_same drop all records where they are all the same.
+#' DO NOT use in practice, only for validation of past results
 #'
 #' @return List of matrix output sensitivities, specificities, and
 #' matrix of probabilities
@@ -39,7 +41,8 @@ staple_multi_mat = function(
   prior = "mean",
   verbose = TRUE,
   trace = 25,
-  ties.method = c("first", "random", "last")
+  ties.method = c("first", "random", "last"),
+  drop_all_same = FALSE
 ){
 
   n_readers = nrow(x)
@@ -60,7 +63,11 @@ staple_multi_mat = function(
     message(paste0("There are ", n_levels, " levels present"))
   }
 
-  not_all_same = matrixStats::colVars(x) > 0
+  if (drop_all_same) {
+    not_all_same = matrixStats::colVars(x) > 0
+  } else {
+    not_all_same = rep(TRUE, ncol(x))
+  }
 
   if (verbose) {
     message("Removing elements where all raters agree")
@@ -74,6 +81,7 @@ staple_multi_mat = function(
     x == val
   })
   names(xmats) = umat
+  rm(x)
 
   ####################################
   # Keeping only voxels with more than 1 says yes
@@ -107,6 +115,7 @@ staple_multi_mat = function(
 
   # mats = lapply(xmats, function(r) r[, not_all_same])
   mats = xmats
+  rm(xmats)
   d_f_t_i = 1 - f_t_i
 
 
@@ -209,6 +218,7 @@ staple_multi_mat = function(
       new_q = new_q/(n_voxels - sum_w + eps)
       return(list(new_p = new_p, new_q = new_q))
     }, mats, dmats, W_is, SIMPLIFY = FALSE)
+    rm(W_is)
     new_p = sapply(f, function(x){
       x$new_p
     })
@@ -246,24 +256,30 @@ staple_multi_mat = function(
   colnames(W_i) = umat
   stopifnot(!any(is.na(W_i)))
 
+  rm(mats)
+  rm(dmats)
   outimg = matrix(NA, nrow = n_all_voxels, ncol = n_levels)
   colnames(outimg) = umat
   outimg[not_all_same, ] = W_i
   # those all the same are given prob 1 of that class
   # xind = x[1, !not_all_same]
-  xind = xsame[1,]
-  sub = outimg[!not_all_same, ]
-  sub_replacement = sapply(umat, function(r) r == xind)
-  stopifnot(all(dim(sub) == dim(sub_replacement)))
-  # sub[, umat == xind] = 1
-  # sub[, umat != xind] = 0
-  outimg[!not_all_same, ] = sub_replacement
+  if (any(!not_all_same)) {
+    xind = xsame[1,]
+    sub = outimg[!not_all_same, ]
+    sub_replacement = sapply(umat, function(r) r == xind)
+    stopifnot(all(dim(sub) == dim(sub_replacement)))
+    # sub[, umat == xind] = 1
+    # sub[, umat != xind] = 0
+    outimg[!not_all_same, ] = sub_replacement
+  }
   stopifnot(!any(is.na(outimg)))
 
   # need to replace prior correctly
   pprior = matrix(NA, nrow = n_all_voxels, ncol = n_levels)
   pprior[not_all_same, ] = prior
-  pprior[!not_all_same, ] = sub_replacement
+  if (any(!not_all_same)) {
+    pprior[!not_all_same, ] = sub_replacement
+  }
   prior = pprior
   rm(list = "pprior")
 
