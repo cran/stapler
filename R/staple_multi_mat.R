@@ -8,7 +8,7 @@
 #' @param prior Either "mean" or a matrix of prior probabilities,
 #' @param verbose print diagnostic messages
 #' @param trace Number for modulus to print out verbose iterations
-#' @param ties.method Method passed to \code{\link{max.col}}
+#' @param ties.method Method passed to \code{\link[base]{max.col}}
 #' for hard segmentation
 #' @param drop_all_same drop all records where they are all the same.
 #' DO NOT use in practice, only for validation of past results
@@ -30,6 +30,10 @@
 #'   ties.method = "first"
 #'
 #' res = staple_multi_mat(x)
+#' xx = rbind(colMeans(x >= 2) > 0.5, colMeans(x >= 2) >= 0.5)
+#' res = staple_multi_mat(xx, prior = rep(0.5, 1000))
+#' res_bin = staple_bin_mat(xx, prior = rep(0.5, 1000))
+#' testthat::expect_equal(res$sensitivity[,"1"], res_bin$sensitivity)
 #'
 #' @importFrom matrixStats colProds colVars
 staple_multi_mat = function(
@@ -62,14 +66,47 @@ staple_multi_mat = function(
   if (verbose) {
     message(paste0("There are ", n_levels, " levels present"))
   }
+  if (n_levels == 2) {
+    x = x == umat[[2]]
+    out =  staple_bin_mat(
+      x,
+      sens_init = sens_init,
+      spec_init = spec_init,
+      max_iter = max_iter,
+      tol = tol,
+      prior = prior,
+      verbose = verbose,
+      trace = trace,
+      drop_all_same = drop_all_same
+    )
+    sens = out$sensitivity
+    out$sensitivity = NA
+    spec = out$specificity
+    out$specificity = NA
+    # these switches are intentional
+    out$specificity = cbind(sens, spec)
+    colnames(out$specificity) = umat
+    out$sensitivity = cbind(spec, sens)
+    colnames(out$sensitivity) = umat
+    rm(sens, spec)
+    out$prior = cbind(1-out$prior, out$prior)
+    colnames(out$prior) = umat
+    out$probability = cbind(1-out$probability, out$probability)
+    colnames(out$probability) = umat
+
+    out$label = umat[as.integer(out$label) + 1]
+
+    return(out)
+  }
 
   if (drop_all_same) {
+    warning("Dropping values where all the same - may be wrong!")
     not_all_same = matrixStats::colVars(x) > 0
   } else {
     not_all_same = rep(TRUE, ncol(x))
   }
 
-  if (verbose) {
+  if (verbose && drop_all_same) {
     message("Removing elements where all raters agree")
   }
   xsame = x[, !not_all_same]
@@ -92,12 +129,22 @@ staple_multi_mat = function(
     f_t_i = sapply(xmats, colMeans, na.rm = TRUE)
     prior = f_t_i
   } else {
-    stop("Not implemented")
+    if (n_levels > 2) {
+      stop("Not implemented")
+    }
     prior = as.matrix(prior)
-    n_prior = ncol(prior)
+    n_prior = nrow(prior)
+    if (n_prior != n_all_voxels) {
+      prior = t(prior)
+      n_prior = nrow(prior)
+    }
     if (n_prior != n_all_voxels) {
       stop("Prior does not have same number of rated elements!")
     }
+    if (n_levels == 2 && ncol(prior) == 1) {
+      prior = cbind(1-prior, prior)
+    }
+
     stopifnot(!any(is.na(prior)))
     f_t_i = prior
     ####################

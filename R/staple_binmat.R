@@ -88,6 +88,7 @@ staple_bin_mat = function(
   # }
 
   if (drop_all_same) {
+    warning("Dropping values where all the same - may be wrong!")
     cs = colSums(x)
     all_zero = cs == 0
     # only_one = cs == 1
@@ -180,6 +181,8 @@ staple_bin_mat = function(
     if (test_run) {
       a_i = b_i = mat
       for (ireader in seq_along(p)) {
+        # take row for reader j
+        # for those elements where D = 1, put p, D = 0, 1-p
         x = a_i[ireader, ]
         x[mat[ireader, ]] = p[ireader]
         x[!mat[ireader, ]] = (1 - p[ireader])

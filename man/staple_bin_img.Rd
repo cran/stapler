@@ -27,7 +27,6 @@ has a resulting image
 Run STAPLE on a set of nifti images
 }
 \examples{
-
 n = 5
 r = 1000
 x = lapply(seq(n), function(i) {
@@ -35,7 +34,14 @@ x = lapply(seq(n), function(i) {
    array(x, dim = c(10,10, 10))
  })
 staple_out = staple_bin_img(x, set_orient = FALSE)
+res = staple(x)
+testthat::expect_equal(staple_out$sensitivity,
+res$sensitivity)
 
+x = lapply(x, RNifti::asNifti, internal = FALSE)
+staple_img_out = staple_bin_img(x, set_orient = FALSE)
+testthat::expect_equal(staple_out$sensitivity,
+staple_img_out$sensitivity)
 n = 5
 r = 1000
 x = lapply(seq(n), function(i) {
